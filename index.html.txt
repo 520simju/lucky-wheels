@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>馬卡龍風格六合一幸運轉盤</title>
+  <style>
+    :root {
+      --bg-cream: #FFFDF9;
+      --card-bg: #FFFFFFEE;
+      --text-main: #4A4A4A;
+      --text-sub: #7A7A7A;
+      --accent-pink: #FFB7B2;
+      --accent-green: #B5EAD7;
+      --accent-purple: #C7CEEA;
+      --accent-yellow: #E2F0CB;
+      --accent-orange: #FFDAC1;
+      --shadow: 0 8px 24px rgba(149, 157, 165, 0.12);
+      --border-radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #FFF1EB 0%, #ACE0F9 100%);
+      min-height: 100vh;
+      color: var(--text-main);
+      padding: 24px 16px 60px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      color: var(--text-sub);
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+    }
+
+    .top-toolbar {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-spin-all {
+      background-color: #FF9AA2;
+      color: white;
+    }
+
+    .btn-reset {
+      background-color: #FFFFFF;
+      color: var(--text-main);
+    }
+
+    /* 6格網格排版 */
+    .grid-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
+    }
+
+    .wheel-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.2s ease;
+    }
+
+    .card-title-input {
+      width: 100%;
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #444;
+      border: 1px dashed #DDD;
+      border-radius: 12px;
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.8);
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    .card-title-input:focus {
+      border-color: #FFB7B2;
+      background: #FFFFFF;
+    }
+
+    /* 轉盤外框與指針 */
+    .wheel-wrapper {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      margin-bottom: 16px;
+    }
+
+    canvas.wheel-canvas {
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      display: block;
+    }
+
+    .wheel-pointer {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 22px solid #FF6B6B;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+      z-index: 10;
+    }
+
+    .center-pin {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 32px;
+      height: 32px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 5;
+    }
+
+    .result-display {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #E65A5A;
+      min-height: 26px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .btn-spin-one {
+      background-color: var(--accent-purple);
+      color: #333;
+      margin-bottom: 16px;
+      width: 80%;
+    }
+
+    /* 選項輸入框 */
+    .input-label {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      align-self: flex-start;
+      margin-bottom: 4px;
+    }
+
+    .items-textarea {
+      width: 100%;
+      height: 85px;
+      border: 1px solid #E0E0E0;
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      resize: vertical;
+      outline: none;
+      background: #FAFAFA;
+      line-height: 1.4;
+    }
+
+    .items-textarea:focus {
+      border-color: #B5EAD7;
+      background: #FFFFFF;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎪 馬卡龍幸運轉盤</h1>
+    <p class="subtitle">六組獨立輪盤，支援個別旋轉與一鍵全轉</p>
+    <div class="top-toolbar">
+      <button class="btn btn-spin-all" id="spinAllBtn">🎡 全部一起轉！</button>
+      <button class="btn btn-reset" id="resetBtn">🔄 重置預設選項</button>
+    </div>
+  </header>
+
+  <main class="grid-container" id="wheelsContainer"></main>
+
+  <script>
+    // 馬卡龍柔和調色盤
+    const MACARON_COLORS = [
+      '#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA',
+      '#FBE7C6', '#D4A5A5', '#99C1DE', '#D0E1D4', '#E6C9A8'
+    ];
+
+    // 六個轉盤的預設初始資料
+    const DEFAULT_WHEELS = [
+      { id: 1, title: '轉盤 1：分組任務', items: ['小組討論', '個人發表', '隨堂小測', '大家齊讀'] },
+      { id: 2, title: '轉盤 2：隨機加分', items: ['加 1 分', '加 2 分', '再接再厲', '幸運加倍'] },
+      { id: 3, title: '轉盤 3：挑戰題目', items: ['第 1 題', '第 2 題', '第 3 題', '第 4 題'] },
+      { id: 4, title: '轉盤 4：課堂活動', items: ['趣味搶答', '同儕互評', '角色扮演', '快速默寫'] },
+      { id: 5, title: '轉盤 5：神秘獎勵', items: ['免作業卡', '優先挑選', '獲得榮譽卡', '鼓掌鼓勵'] },
+      { id: 6, title: '轉盤 6：今日順序', items: ['第 1 組', '第 2 組', '第 3 組', '第 4 組', '第 5 組'] }
+    ];
+
+    let wheelsData = [];
+
+    // 從 localStorage 讀取或載入預設
+    function loadData() {
+      const saved = localStorage.getItem('macaron_wheels_data');
+      if (saved) {
+        try {
+          wheelsData = JSON.parse(saved);
+          return;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      wheelsData = JSON.parse(JSON.stringify(DEFAULT_WHEELS));
+    }
+
+    function saveData() {
+      localStorage.setItem('macaron_wheels_data', JSON.stringify(wheelsData));
+    }
+
+    // 狀態追蹤
+    const wheelStates = {};
+
+    function initWheels() {
+      loadData();
+      const container = document.getElementById('wheelsContainer');
+      container.innerHTML = '';
+
+      wheelsData.forEach((w) => {
+        wheelStates[w.id] = {
+          currentAngle: 0,
+          isSpinning: false
+        };
+
+        const card = document.createElement('div');
+        card.className = 'wheel-card';
+        card.innerHTML = `
+          <input type="text" class="card-title-input" value="${w.title}" data-id="${w.id}">
+          <div class="wheel-wrapper">
+            <div class="wheel-pointer"></div>
+            <canvas class="wheel-canvas" id="canvas-${w.id}" width="260" height="260"></canvas>
+            <div class="center-pin"></div>
+          </div>
+          <div class="result-display" id="result-${w.id}">準備就緒</div>
+          <button class="btn btn-spin-one" id="btn-spin-${w.id}">旋轉這盤</button>
+          <span class="input-label">選項（每行一項）：</span>
+          <textarea class="items-textarea" data-id="${w.id}">${w.items.join('\n')}</textarea>
+        `;
+
+        container.appendChild(card);
+
+        // 綁定標題變更
+        const titleInput = card.querySelector('.card-title-input');
+        titleInput.addEventListener('input', (e) => {
+          const target = wheelsData.find(item => item.id === w.id);
+          if (target) {
+            target.title = e.target.value;
+            saveData();
+          }
+        });
+
+        // 綁定選項文字框變更
+        const textarea = card.querySelector('.items-textarea');
+        textarea.addEventListener('input', (e) => {
+          const lines = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
+          const target = wheelsData.find(item => item.id === w.id);
+          if (target) {
+            target.items = lines.length ? lines : ['無項目'];
+            saveData();
+            drawWheel(w.id);
+          }
+        });
+
+        // 綁定單一旋轉按鈕
+        const spinBtn = card.querySelector(`#btn-spin-${w.id}`);
+        spinBtn.addEventListener('click', () => spinWheel(w.id));
+
+        // 初始繪製
+        drawWheel(w.id);
+      });
+    }
+
+    // Canvas 繪製函式
+    function drawWheel(id) {
+      const canvas = document.getElementById(`canvas-${id}`);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const wheel = wheelsData.find(w => w.id === id);
+      const state = wheelStates[id];
+      const items = wheel.items;
+      const numItems = items.length;
+      const arc = (2 * Math.PI) / numItems;
+      const radius = canvas.width / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate(state.currentAngle);
+
+      for (let i = 0; i < numItems; i++) {
+        const startAngle = i * arc;
+        const endAngle = startAngle + arc;
+
+        // 繪製扇形
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius - 4, startAngle, endAngle);
+        ctx.fillStyle = MACARON_COLORS[i % MACARON_COLORS.length];
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 繪製文字
+        ctx.save();
+        ctx.fillStyle = '#333333';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        
+        // 旋轉到扇形正中央
+        ctx.rotate(startAngle + arc / 2);
+        const text = items[i].length > 7 ? items[i].substring(0, 6) + '…' : items[i];
+        ctx.fillText(text, radius - 16, 0);
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
+    // 旋轉邏輯（物理減速緩動）
+    function spinWheel(id) {
+      const state = wheelStates[id];
+      if (state.isSpinning) return;
+
+      const wheel = wheelsData.find(w => w.id === id);
+      if (!wheel || wheel.items.length === 0) return;
+
+      state.isSpinning = true;
+      const resultEl = document.getElementById(`result-${id}`);
+      resultEl.textContent = '旋轉中...';
+
+      const spinRounds = 5 + Math.random() * 3; // 隨機旋轉 5~8 圈
+      const targetAngle = state.currentAngle + spinRounds * Math.PI * 2 + Math.random() * Math.PI * 2;
+      const duration = 3000 + Math.random() * 500; // 動畫耗時
+      const startTime = performance.now();
+      const initialAngle = state.currentAngle;
+
+      function animate(time) {
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Ease-out 指數緩動曲線
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        state.currentAngle = initialAngle + (targetAngle - initialAngle) * easeOut;
+
+        drawWheel(id);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          state.isSpinning = false;
+          calcResult(id);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // 計算指針停留之結果
+    function calcResult(id) {
+      const state = wheelStates[id];
+      const wheel = wheelsData.find(w => w.id === id);
+      const numItems = wheel.items.length;
+      const arc = (2 * Math.PI) / numItems;
+
+      // 指針位於頂部 (-PI/2)
+      let normalizedAngle = (state.currentAngle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+      let pointerAngle = (1.5 * Math.PI - normalizedAngle) % (2 * Math.PI);
+      if (pointerAngle < 0) pointerAngle += 2 * Math.PI;
+
+      const winningIndex = Math.floor(pointerAngle / arc) % numItems;
+      const winner = wheel.items[winningIndex];
+
+      const resultEl = document.getElementById(`result-${id}`);
+      resultEl.textContent = `🎯 結果：${winner}`;
+    }
+
+    // 全部一起轉
+    document.getElementById('spinAllBtn').addEventListener('click', () => {
+      wheelsData.forEach(w => {
+        spinWheel(w.id);
+      });
+    });
+
+    // 重設回預設項目
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (confirm('確定要恢復預設選項嗎？這會清除目前的自訂內容喔！')) {
+        localStorage.removeItem('macaron_wheels_data');
+        initWheels();
+      }
+    });
+
+    // 啟動轉盤
+    initWheels();
+  </script>
+</body>
+</html>
